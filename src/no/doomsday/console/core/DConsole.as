@@ -1,45 +1,12 @@
 ﻿package no.doomsday.console.core
 {
+	import com.adobe.images.PNGEncoder;
+	
 	import flash.desktop.Clipboard;
 	import flash.desktop.ClipboardFormats;
-	import flash.display.Loader;
-	import flash.media.SoundMixer;
-	import flash.net.URLLoader;
-	import flash.net.URLRequest;
-	import com.adobe.images.PNGEncoder;
-	import flash.utils.getDefinitionByName;
-	import flash.utils.getTimer;
-	import net.hires.debug.ConsoleStats;
-	import no.doomsday.console.core.commands.CommandManager;
-	import no.doomsday.console.core.commands.ConsoleCommand;
-	import no.doomsday.console.core.commands.FunctionCallCommand;
-	import no.doomsday.console.core.events.ConsoleEvent;
-	import no.doomsday.console.core.gui.KeyStroke;
-	import no.doomsday.console.core.gui.ScaleHandle;
-	import no.doomsday.console.core.interfaces.IConsole;
-	import no.doomsday.console.core.interfaces.ILogger;
-	import no.doomsday.console.core.introspection.AccessorDesc;
-	import no.doomsday.console.core.introspection.ChildScopeDesc;
-	import no.doomsday.console.core.introspection.ScopeManager;
-	import no.doomsday.console.core.introspection.InspectionUtils;
-	import no.doomsday.console.core.introspection.MethodDesc;
-	import no.doomsday.console.core.introspection.VariableDesc;
-	import no.doomsday.console.utilities.controller.ControllerManager;
-	import no.doomsday.console.utilities.math.MathUtils;
-	import no.doomsday.console.utilities.measurement.MeasurementTool;
-	import no.doomsday.console.core.messages.Message;
-	import no.doomsday.console.core.messages.MessageRepeatMode;
-	import no.doomsday.console.core.messages.MessageTypes;
-	import no.doomsday.console.utilities.monitoring.MonitorManager;
-	import no.doomsday.console.core.persistence.PersistenceManager;
-	import no.doomsday.console.core.references.ReferenceManager;
-	import no.doomsday.console.core.text.autocomplete.AutocompleteDictionary;
-	import no.doomsday.console.core.text.autocomplete.AutocompleteManager;
-	import no.doomsday.console.core.text.TextFormats;
-	import no.doomsday.console.core.text.TextUtils;
 	import flash.display.BitmapData;
 	import flash.display.DisplayObject;
-	import flash.display.DisplayObjectContainer;
+	import flash.display.Loader;
 	import flash.display.Shape;
 	import flash.display.Sprite;
 	import flash.display.StageAlign;
@@ -52,7 +19,8 @@
 	import flash.filters.DropShadowFilter;
 	import flash.geom.Rectangle;
 	import flash.net.FileReference;
-	import flash.net.SharedObject;
+	import flash.net.URLLoader;
+	import flash.net.URLRequest;
 	import flash.system.Capabilities;
 	import flash.system.System;
 	import flash.text.GridFitType;
@@ -62,10 +30,36 @@
 	import flash.ui.Keyboard;
 	import flash.ui.Mouse;
 	import flash.utils.ByteArray;
-	import flash.utils.describeType;
-	import flash.utils.Dictionary;
 	import flash.utils.Timer;
+	import flash.utils.getDefinitionByName;
+	
+	import net.hires.debug.ConsoleStats;
+	
+	import no.doomsday.console.core.commands.CommandManager;
+	import no.doomsday.console.core.commands.ConsoleCommand;
+	import no.doomsday.console.core.commands.FunctionCallCommand;
+	import no.doomsday.console.core.events.ConsoleEvent;
+	import no.doomsday.console.core.gui.KeyStroke;
+	import no.doomsday.console.core.gui.ScaleHandle;
 	import no.doomsday.console.core.input.KeyboardManager;
+	import no.doomsday.console.core.interfaces.IConsole;
+	import no.doomsday.console.core.interfaces.ILogger;
+	import no.doomsday.console.core.introspection.InspectionUtils;
+	import no.doomsday.console.core.introspection.ProductInfo;
+	import no.doomsday.console.core.introspection.ScopeManager;
+	import no.doomsday.console.core.messages.Message;
+	import no.doomsday.console.core.messages.MessageRepeatMode;
+	import no.doomsday.console.core.messages.MessageTypes;
+	import no.doomsday.console.core.persistence.PersistenceManager;
+	import no.doomsday.console.core.references.ReferenceManager;
+	import no.doomsday.console.core.text.TextFormats;
+	import no.doomsday.console.core.text.TextUtils;
+	import no.doomsday.console.core.text.autocomplete.AutocompleteDictionary;
+	import no.doomsday.console.core.text.autocomplete.AutocompleteManager;
+	import no.doomsday.console.utilities.controller.ControllerManager;
+	import no.doomsday.console.utilities.math.MathUtils;
+	import no.doomsday.console.utilities.measurement.MeasurementTool;
+	import no.doomsday.console.utilities.monitoring.MonitorManager;
 	import no.doomsday.utilities.text.Lipsum;
 	/**
 	 * ...
@@ -300,6 +294,7 @@
 			addCommand(new FunctionCallCommand("toggleTraceDisplay", toggleTraceDisplay, "System", "Toggle display of trace values"));
 			addCommand(new FunctionCallCommand("clearTrace", clearTrace, "System", "Clear trace cache"));
 			addCommand(new FunctionCallCommand("capabilities", getCapabilities, "System", "Prints the system capabilities"));
+			addCommand(new FunctionCallCommand("productInfo", getProductInfo, "System", "Prints the contents of the product info tag"));
 			addCommand(new FunctionCallCommand("maximizeConsole", maximize,"System","Sets console height to fill the screen"));
 			addCommand(new FunctionCallCommand("minimizeConsole", minimize, "System", "Sets console height to 1"));
 			addCommand(new FunctionCallCommand("toggleTabSearch", toggleTabSearch, "System", "Toggles tabbing to search commands and methods for the current word"));
@@ -343,6 +338,7 @@
 			addCommand(new FunctionCallCommand("getClass", getClassByName, "Utility", "Returns a reference to the Class object of the specified classname"));
 			addCommand(new FunctionCallCommand("getLoader", getLoader, "Utility", "Returns a 'dumb' Loader getting data from the url X"));
 			addCommand(new FunctionCallCommand("toClipboard", toClipBoard, "Utility", "Takes value X and puts it in the system clipboard (great for grabbing command XML output)"));
+
 				
 			addCommand(new FunctionCallCommand("addMonitor", monitorManager.createMonitor, "Monitoring", "Begins monitoring ..values of the current scope"));
 			addCommand(new FunctionCallCommand("removeMonitor", monitorManager.destroyMonitor, "Monitoring", "Stops monitoring the current scope"));
@@ -591,6 +587,22 @@
 			print("	Capabilities.screenResolutionY : "+Capabilities.screenResolutionY);
 			print("	Capabilities.version : "+Capabilities.version);
 		}
+		
+		private function getProductInfo():void
+		{
+			var pi:ProductInfo = new ProductInfo(this);
+			print("Product info:", MessageTypes.SYSTEM);
+			if (pi.available) {
+				print(" ProductID : " + pi.productID);
+				print(" Edition : " + pi.edition);
+				print(" Version : " + pi.sdkVersion);
+				print(" Compilation Date : " + pi.compilationDate);
+			}
+			else {
+				print(" Product info not available for this SWF (tag not found).");
+			}
+		}
+		
 		/**
 		 * Alternative trace method
 		 * @param	...values
